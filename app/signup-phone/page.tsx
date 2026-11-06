@@ -89,7 +89,7 @@ export default function SignupPage() {
 
       {/* Top Announcement Banner */}
       <div className="mb-3 w-full max-w-lg rounded-xl border border-red-500/30 bg-red-600/15 px-3 py-3 text-center sm:mb-4 sm:px-5">
-        <p className="text-sm font-bold leading-5 text-red-300 sm:text-base">
+        <p className="text-sm font-bold leading-5 text-red-300 sm:text-sm">
           Charged once for the first month and twice for the subsequent months
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function SignupPage() {
         {/* Heading */}
         <div className="mt-2">
           <p className="text-sm leading-5 text-gray-400 sm:text-sm sm:leading-6">
-            Register to get started with DrevaSports.
+           
             Create your account to enjoy 50% discount for first month.
           </p>
         </div>
