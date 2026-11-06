@@ -11,15 +11,15 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
-  // Require the user to sign in first.
-  if (!session?.user?.email) {
+  // Require authentication.
+  if (!session?.user?.id) {
     redirect("/login");
   }
 
-  // Retrieve the current user's information from the database.
+  // Retrieve the account using its unique ID.
   const user = await prisma.user.findUnique({
     where: {
-      email: session.user.email,
+      id: session.user.id,
     },
     select: {
       id: true,
@@ -58,6 +58,7 @@ export default async function DashboardPage() {
 
   const joinedDate = new Intl.DateTimeFormat("en", {
     dateStyle: "long",
+    timeStyle: "short",
   }).format(user.createdAt);
 
   const subscriptionStatus =
@@ -66,10 +67,11 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-950 px-5 py-12 text-white sm:px-8">
       <div className="mx-auto max-w-5xl">
+
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
           <Link href="/" className="text-2xl font-black italic">
-            BETI<span className="text-red-500">SPORTS</span>
+            DREVA<span className="text-red-500">SPORTS</span>
           </Link>
 
           <Link
@@ -97,8 +99,12 @@ export default async function DashboardPage() {
 
         {/* User information */}
         <section className="grid gap-6 md:grid-cols-2">
+
+          {/* Personal information */}
           <div className="rounded-2xl border border-white/10 bg-gray-900 p-6">
-            <h2 className="text-lg font-bold">Personal information</h2>
+            <h2 className="text-lg font-bold">
+              Personal information
+            </h2>
 
             <div className="mt-6 space-y-5">
               <div>
@@ -126,14 +132,18 @@ export default async function DashboardPage() {
                 <p className="text-sm text-gray-400">
                   Registration date
                 </p>
-                <p className="mt-1 font-medium">{joinedDate}</p>
+                <p className="mt-1 font-medium">
+                  {joinedDate}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Subscription information */}
           <div className="rounded-2xl border border-white/10 bg-gray-900 p-6">
-            <h2 className="text-lg font-bold">Account status</h2>
+            <h2 className="text-lg font-bold">
+              Account status
+            </h2>
 
             <div className="mt-6">
               <p className="text-sm text-gray-400">
@@ -160,7 +170,9 @@ export default async function DashboardPage() {
             </div>
 
             <div className="mt-5">
-              <p className="text-sm text-gray-400">Downloads used</p>
+              <p className="text-sm text-gray-400">
+                Downloads used
+              </p>
               <p className="mt-1 font-medium">
                 {user.subscription?.downloadCount ?? 0}
               </p>
