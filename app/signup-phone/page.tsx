@@ -23,6 +23,7 @@ export default function SignupPage() {
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
+
     const finalCountry =
       country === "Other" ? otherCountry.trim() : country;
 
@@ -35,7 +36,9 @@ export default function SignupPage() {
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: cleanName,
           email: cleanEmail,
@@ -70,11 +73,13 @@ export default function SignupPage() {
       window.location.assign("/api/polar/checkout?plan=monthly");
     } catch (err) {
       console.error("Signup error:", err);
+
       setError(
         err instanceof Error
           ? err.message
           : "Network error. Please try again."
       );
+
       setLoading(false);
     }
   }
@@ -99,21 +104,25 @@ export default function SignupPage() {
 
         {/* Heading */}
         <div className="mt-2">
-          <p className="text-xs leading-5 text-gray-400 sm:text-sm sm:leading-6">
+          <p className="text-sm leading-5 text-gray-400 sm:text-sm sm:leading-6">
             Register to get started with DrevaSports.
             Create your account to enjoy 50% discount for first month.
           </p>
         </div>
 
         {/* Signup Form */}
-        <form onSubmit={submit} className="mt-4 space-y-3 sm:mt-7 sm:space-y-4">
-
+        <form
+          onSubmit={submit}
+          className="mt-4 space-y-3 sm:mt-7 sm:space-y-4"
+        >
+          {/* Full name */}
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
+            <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Full name
             </label>
+
             <input
-              className="field !h-10 !py-2 text-sm sm:!h-12"
+              className="field !h-11 !py-2 text-base sm:!h-12 sm:text-sm"
               type="text"
               required
               maxLength={100}
@@ -124,12 +133,14 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Phone number */}
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
+            <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Phone number
             </label>
+
             <input
-              className="field !h-10 !py-2 text-sm sm:!h-12"
+              className="field !h-11 !py-2 text-base sm:!h-12 sm:text-sm"
               type="tel"
               required
               maxLength={25}
@@ -140,12 +151,14 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Email address */}
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
+            <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Email address
             </label>
+
             <input
-              className="field !h-10 !py-2 text-sm sm:!h-12"
+              className="field !h-11 !py-2 text-base sm:!h-12 sm:text-sm"
               type="email"
               required
               maxLength={254}
@@ -156,12 +169,14 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Country */}
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
+            <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Country
             </label>
+
             <select
-              className="field !h-10 !py-2 text-sm sm:!h-12"
+              className="field !h-11 !py-2 text-base sm:!h-12 sm:text-sm"
               value={country}
               onChange={(e) => {
                 setCountry(e.target.value);
@@ -173,13 +188,15 @@ export default function SignupPage() {
             </select>
           </div>
 
+          {/* Other country */}
           {country === "Other" && (
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
+              <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
                 Enter your country
               </label>
+
               <input
-                className="field !h-10 !py-2 text-sm sm:!h-12"
+                className="field !h-11 !py-2 text-base sm:!h-12 sm:text-sm"
                 type="text"
                 required
                 maxLength={100}
@@ -194,7 +211,7 @@ export default function SignupPage() {
           {error && (
             <p
               role="alert"
-              className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-xs leading-4 text-red-300 sm:p-3 sm:text-sm"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-sm leading-5 text-red-300 sm:p-3 sm:text-sm"
             >
               {error}
             </p>
@@ -204,7 +221,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-xl sm:py-3"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-base font-bold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-xl sm:py-3 sm:text-sm"
           >
             {loading ? (
               <>
@@ -222,7 +239,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <div className="mt-4 border-t border-white/10 pt-3 text-center sm:mt-7 sm:pt-5">
-          <p className="text-[10px] text-gray-500 sm:text-xs">
+          <p className="text-xs text-gray-500 sm:text-xs">
             © {new Date().getFullYear()} DrevaSports. All rights reserved.
           </p>
         </div>
