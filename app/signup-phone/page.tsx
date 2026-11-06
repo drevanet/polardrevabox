@@ -17,14 +17,12 @@ export default function SignupPage() {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim();
-
     const finalCountry =
       country === "Other" ? otherCountry.trim() : country;
 
@@ -35,12 +33,9 @@ export default function SignupPage() {
     }
 
     try {
-      // Create the account.
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: cleanName,
           email: cleanEmail,
@@ -55,14 +50,12 @@ export default function SignupPage() {
         throw new Error(data.error || "Registration failed.");
       }
 
-      // Confirm that the signup API returned a token.
       if (!data.signupToken) {
         throw new Error(
           "Account created, but the authentication token was not returned."
         );
       }
 
-      // Sign in the exact newly created account.
       const result = await signIn("credentials", {
         signupToken: data.signupToken,
         redirect: false,
@@ -74,33 +67,29 @@ export default function SignupPage() {
         );
       }
 
-      // Redirect directly to monthly Polar checkout.
       window.location.assign("/api/polar/checkout?plan=monthly");
-
     } catch (err) {
       console.error("Signup error:", err);
-
       setError(
         err instanceof Error
           ? err.message
           : "Network error. Please try again."
       );
-
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#100b0b] px-5 py-14 text-white">
-      <div className="w-full max-w-lg rounded-3xl border border-red-500/20 bg-[#1c1515] p-8 shadow-2xl shadow-red-950/30 sm:p-12">
+    <main className="flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden bg-[#100b0b] px-3 py-2 text-white sm:px-5 sm:py-6">
+      <div className="w-full max-w-lg rounded-2xl border border-red-500/20 bg-[#1c1515] p-4 shadow-2xl shadow-red-950/30 sm:rounded-3xl sm:p-10">
 
         {/* Logo */}
         <Link
           href="/"
-          className="inline-flex items-center gap-3 text-2xl font-black tracking-tight"
+          className="inline-flex items-center gap-2 text-xl font-black tracking-tight sm:gap-3 sm:text-2xl"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-lg shadow-red-600/20">
-            <Trophy className="h-6 w-6 text-white" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 shadow-lg shadow-red-600/20 sm:h-11 sm:w-11 sm:rounded-xl">
+            <Trophy className="h-5 w-5 text-white sm:h-6 sm:w-6" />
           </span>
 
           <span>
@@ -109,31 +98,22 @@ export default function SignupPage() {
         </Link>
 
         {/* Heading */}
-        <div className="mt-9">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-500">
-            Join DrevaSports
-          </span>
-
-          <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
-            Create your account
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-gray-400">
+        <div className="mt-2">
+          <p className="text-xs leading-5 text-gray-400 sm:text-sm sm:leading-6">
             Register to get started with DrevaSports.
-            Create your account and continue to the next step.
+            Create your account to enjoy 50% discount for first month.
           </p>
         </div>
 
         {/* Signup Form */}
-        <form onSubmit={submit} className="mt-9 space-y-5">
+        <form onSubmit={submit} className="mt-4 space-y-3 sm:mt-7 sm:space-y-4">
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-200">
+            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Full name
             </label>
-
             <input
-              className="field"
+              className="field !h-10 !py-2 text-sm sm:!h-12"
               type="text"
               required
               maxLength={100}
@@ -145,12 +125,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-200">
+            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Phone number
             </label>
-
             <input
-              className="field"
+              className="field !h-10 !py-2 text-sm sm:!h-12"
               type="tel"
               required
               maxLength={25}
@@ -162,12 +141,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-200">
+            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Email address
             </label>
-
             <input
-              className="field"
+              className="field !h-10 !py-2 text-sm sm:!h-12"
               type="email"
               required
               maxLength={254}
@@ -179,12 +157,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-200">
+            <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Country
             </label>
-
             <select
-              className="field"
+              className="field !h-10 !py-2 text-sm sm:!h-12"
               value={country}
               onChange={(e) => {
                 setCountry(e.target.value);
@@ -198,12 +175,11 @@ export default function SignupPage() {
 
           {country === "Other" && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-200">
+              <label className="mb-1 block text-xs font-semibold text-gray-200 sm:mb-2 sm:text-sm">
                 Enter your country
               </label>
-
               <input
-                className="field"
+                className="field !h-10 !py-2 text-sm sm:!h-12"
                 type="text"
                 required
                 maxLength={100}
@@ -218,7 +194,7 @@ export default function SignupPage() {
           {error && (
             <p
               role="alert"
-              className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-xs leading-4 text-red-300 sm:p-3 sm:text-sm"
             >
               {error}
             </p>
@@ -228,29 +204,28 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-4 font-bold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-xl sm:py-3"
           >
             {loading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
                 Creating account...
               </>
             ) : (
               <>
                 Create account
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </>
             )}
           </button>
         </form>
 
         {/* Footer */}
-        <div className="mt-8 border-t border-white/10 pt-6 text-center">
-          <p className="text-xs text-gray-500">
+        <div className="mt-4 border-t border-white/10 pt-3 text-center sm:mt-7 sm:pt-5">
+          <p className="text-[10px] text-gray-500 sm:text-xs">
             © {new Date().getFullYear()} DrevaSports. All rights reserved.
           </p>
         </div>
-
       </div>
     </main>
   );
