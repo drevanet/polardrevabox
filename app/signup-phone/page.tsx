@@ -85,7 +85,16 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden bg-[#100b0b] px-3 py-2 text-white sm:px-5 sm:py-6">
+    <main className="flex min-h-[100svh] w-full flex-col items-center justify-center overflow-x-hidden bg-[#100b0b] px-3 py-3 text-white sm:px-5 sm:py-6">
+
+      {/* Top Announcement Banner */}
+      <div className="mb-3 w-full max-w-lg rounded-xl border border-red-500/30 bg-red-600/15 px-3 py-3 text-center sm:mb-4 sm:px-5">
+        <p className="text-sm font-bold leading-5 text-red-300 sm:text-base">
+          Charged once for the first month and twice for the subsequent months
+        </p>
+      </div>
+
+      {/* Signup Card */}
       <div className="w-full max-w-lg rounded-2xl border border-red-500/20 bg-[#1c1515] p-4 shadow-2xl shadow-red-950/30 sm:rounded-3xl sm:p-10">
 
         {/* Logo */}
@@ -115,7 +124,8 @@ export default function SignupPage() {
           onSubmit={submit}
           className="mt-4 space-y-3 sm:mt-7 sm:space-y-4"
         >
-          {/* Full name */}
+
+          {/* Full Name */}
           <div>
             <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Full name
@@ -133,7 +143,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* Phone number */}
+          {/* Phone Number */}
           <div>
             <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Phone number
@@ -151,7 +161,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* Email address */}
+          {/* Email Address */}
           <div>
             <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
               Email address
@@ -188,7 +198,7 @@ export default function SignupPage() {
             </select>
           </div>
 
-          {/* Other country */}
+          {/* Other Country */}
           {country === "Other" && (
             <div>
               <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
@@ -207,7 +217,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Error message */}
+          {/* Error Message */}
           {error && (
             <p
               role="alert"
@@ -217,7 +227,7 @@ export default function SignupPage() {
             </p>
           )}
 
-          {/* Submit button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -239,10 +249,11 @@ export default function SignupPage() {
 
         {/* Footer */}
         <div className="mt-4 border-t border-white/10 pt-3 text-center sm:mt-7 sm:pt-5">
-          <p className="text-xs text-gray-500 sm:text-xs">
+          <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} DrevaSports. All rights reserved.
           </p>
         </div>
+
       </div>
     </main>
   );
