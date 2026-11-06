@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
 
     if (!session?.user?.id) {
       const loginUrl = new URL("/login", request.url);
+
       loginUrl.searchParams.set(
         "callbackUrl",
         request.nextUrl.pathname + request.nextUrl.search
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Get selected plan.
+    // Get selected subscription plan.
     const plan = request.nextUrl.searchParams.get("plan");
 
     if (!plan || !products[plan]) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       console.error("NEXTAUTH_URL is missing.");
 
       return NextResponse.json(
-        { error: "Application URL is not configured." },
+        { error: "NEXTAUTH_URL is missing." },
         { status: 500 }
       );
     }
@@ -72,21 +73,28 @@ export async function GET(request: NextRequest) {
           : "production",
     });
 
-    // Create checkout session.
+    // Create Polar checkout session.
     const checkout = await polar.checkouts.create({
       products: [productId],
-      success_url: `${appUrl}/editor?checkout=success`,
+
+      // Redirect customer to the custom payment completion page.
+      success_url: `${appUrl.replace(/\/$/, "")}/payment-complete`,
+
       customer_email: session.user.email ?? undefined,
+
+      // Important: allows webhook to identify the exact user.
       external_customer_id: session.user.id,
+
       metadata: {
         plan,
         userId: session.user.id,
-        source: "drevasports",
+        source: "reva-box",
       },
     });
 
     // Redirect to Polar hosted checkout.
     return NextResponse.redirect(checkout.url);
+
   } catch (error) {
     console.error("Polar checkout error:", error);
 

@@ -4,6 +4,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { Trophy, ArrowRight, Loader2 } from "lucide-react";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -51,8 +52,7 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed.");
-        return;
+        throw new Error(data.error || "Registration failed.");
       }
 
       // Automatically sign in the new user.
@@ -63,63 +63,67 @@ export default function SignupPage() {
       });
 
       if (result?.error || !result?.ok) {
-        setError(
+        throw new Error(
           "Your account was created, but automatic sign-in failed. Please sign in to continue."
         );
-        return;
       }
 
-      // Redirect directly to the monthly Polar checkout.
+      // Redirect directly to monthly Polar checkout.
       window.location.assign("/api/polar/checkout?plan=monthly");
 
     } catch (err) {
       console.error("Signup error:", err);
-      setError("Network error. Please try again.");
-    } finally {
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Network error. Please try again."
+      );
+
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-950 px-5 py-14 text-white">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-gray-900 p-8 shadow-2xl sm:p-12">
+    <main className="flex min-h-screen items-center justify-center bg-[#100b0b] px-5 py-14 text-white">
 
-        <Link href="/" className="text-xl font-black">
-          reva<span className="text-violet-400">box.</span>
+      <div className="w-full max-w-lg rounded-3xl border border-red-500/20 bg-[#1c1515] p-8 shadow-2xl shadow-red-950/30 sm:p-12">
+
+        {/* Logo */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 text-2xl font-black tracking-tight"
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 shadow-lg shadow-red-600/20">
+            <Trophy className="h-6 w-6 text-white" />
+          </span>
+
+          <span>
+            Dreva<span className="text-red-500">Sports</span>
+          </span>
         </Link>
 
-        <h1 className="mt-8 text-3xl font-black">
-          Create your account
-        </h1>
+        {/* Heading */}
+        <div className="mt-9">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-500">
+            Join DrevaSports
+          </span>
 
-        <p className="mt-2 text-sm text-gray-400">
-          Register to get started with Reva Box.
-        </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+            Create your account
+          </h1>
 
-        {/* Monthly subscription information */}
-        <div className="mt-6 rounded-xl border border-violet-500/30 bg-violet-500/10 p-4">
-          <p className="text-sm font-semibold text-violet-300">
-            Monthly Subscription
-          </p>
-
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-3xl font-black text-white">
-              $10
-            </span>
-            <span className="text-sm text-gray-400">
-              / month
-            </span>
-          </div>
-
-          <p className="mt-2 text-sm text-gray-400">
-            Includes 50 project downloads per monthly billing period.
+          <p className="mt-3 text-sm leading-6 text-gray-400">
+            Register to get started with DrevaSports.
+            Create your account and continue to the next step.
           </p>
         </div>
 
-        <form onSubmit={submit} className="mt-8 space-y-5">
+        {/* Signup Form */}
+        <form onSubmit={submit} className="mt-9 space-y-5">
 
           <div>
-            <label className="mb-2 block text-sm">
+            <label className="mb-2 block text-sm font-semibold text-gray-200">
               Full name
             </label>
 
@@ -136,7 +140,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm">
+            <label className="mb-2 block text-sm font-semibold text-gray-200">
               Phone number
             </label>
 
@@ -153,7 +157,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm">
+            <label className="mb-2 block text-sm font-semibold text-gray-200">
               Email address
             </label>
 
@@ -170,7 +174,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm">
+            <label className="mb-2 block text-sm font-semibold text-gray-200">
               Country
             </label>
 
@@ -189,7 +193,7 @@ export default function SignupPage() {
 
           {country === "Other" && (
             <div>
-              <label className="mb-2 block text-sm">
+              <label className="mb-2 block text-sm font-semibold text-gray-200">
                 Enter your country
               </label>
 
@@ -207,26 +211,43 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* Error message */}
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
+              className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300"
             >
               {error}
             </p>
           )}
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-violet-500 px-5 py-3.5 font-bold text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-4 font-bold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading
-              ? "Creating account..."
-              : "Create account and proceed to payment"}
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              <>
+                Create account
+                <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </button>
 
         </form>
+
+        {/* Footer */}
+        <div className="mt-8 border-t border-white/10 pt-6 text-center">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()} DrevaSports. All rights reserved.
+          </p>
+        </div>
 
       </div>
     </main>
