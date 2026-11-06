@@ -89,7 +89,7 @@ export default function SignupPage() {
 
       {/* Top Announcement Banner */}
       <div className="mb-3 w-full max-w-lg rounded-xl border border-red-500/30 bg-red-600/15 px-3 py-3 text-center sm:mb-4 sm:px-5">
-        <p className="text-sm font-bold leading-5 text-red-300 sm:text-sm">
+        <p className="text-[11px] font-bold leading-5 text-red-300 sm:text-sm">
           Charged once for the first month and twice for the subsequent months
         </p>
       </div>
