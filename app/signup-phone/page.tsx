@@ -55,10 +55,16 @@ export default function SignupPage() {
         throw new Error(data.error || "Registration failed.");
       }
 
-      // Automatically sign in the new user.
+      // Confirm that the signup API returned a token.
+      if (!data.signupToken) {
+        throw new Error(
+          "Account created, but the authentication token was not returned."
+        );
+      }
+
+      // Sign in the exact newly created account.
       const result = await signIn("credentials", {
-        email: cleanEmail,
-        phone: cleanPhone,
+        signupToken: data.signupToken,
         redirect: false,
       });
 
@@ -86,7 +92,6 @@ export default function SignupPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#100b0b] px-5 py-14 text-white">
-
       <div className="w-full max-w-lg rounded-3xl border border-red-500/20 bg-[#1c1515] p-8 shadow-2xl shadow-red-950/30 sm:p-12">
 
         {/* Logo */}
@@ -204,9 +209,7 @@ export default function SignupPage() {
                 maxLength={100}
                 placeholder="Enter country name"
                 value={otherCountry}
-                onChange={(e) =>
-                  setOtherCountry(e.target.value)
-                }
+                onChange={(e) => setOtherCountry(e.target.value)}
               />
             </div>
           )}
@@ -239,7 +242,6 @@ export default function SignupPage() {
               </>
             )}
           </button>
-
         </form>
 
         {/* Footer */}

@@ -1,7 +1,7 @@
-
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+import { verifySignupToken } from "@/lib/signup-token";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -15,43 +15,62 @@ export const authOptions: NextAuthOptions = {
 
   providers: [
     CredentialsProvider({
-      name: "Email and Phone",
+      name: "Email, Phone or Signup Token",
 
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-        },
-        phone: {
-          label: "Phone Number",
-          type: "tel",
-        },
+        email: { label: "Email", type: "email" },
+        phone: { label: "Phone Number", type: "tel" },
+        signupToken: { label: "Signup Token", type: "text" },
       },
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.phone) {
+        if (!credentials) return null;
+
+        // New signup: authenticate the exact account using its signed token.
+        if (credentials.signupToken) {
+          const userId = verifySignupToken(credentials.signupToken);
+
+          if (!userId) return null;
+
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          });
+
+          if (!user) return null;
+
+          return user;
+        }
+
+        // Existing login: require both email and phone.
+        if (!credentials.email || !credentials.phone) {
           return null;
         }
 
         const email = credentials.email.trim().toLowerCase();
         const phone = credentials.phone.trim();
 
-        const user = await prisma.user.findFirst({
+        const users = await prisma.user.findMany({
           where: {
             email,
             phone,
           },
+          take: 2,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         });
 
-        if (!user) {
-          return null;
-        }
+        // Do not authenticate an ambiguous account.
+        if (users.length !== 1) return null;
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        };
+        return users[0];
       },
     }),
   ],

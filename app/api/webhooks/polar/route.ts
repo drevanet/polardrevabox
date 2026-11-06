@@ -4,8 +4,19 @@ import { webhooks } from "@polar-sh/sdk/2026-10";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const allowedPlans = ["monthly", "biweekly", "yearly"];
+
+const allowedEvents = [
+  "subscription.created",
+  "subscription.updated",
+  "subscription.active",
+  "subscription.canceled",
+  "subscription.uncanceled",
+  "subscription.revoked",
+  "subscription.past_due",
+];
 
 export async function POST(req: NextRequest) {
   const secret = process.env.POLAR_WEBHOOK_SECRET;
@@ -19,7 +30,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify the original request body and webhook signature.
+  // 1. Verify Polar webhook signature.
   let event: any;
 
   try {
@@ -53,16 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     console.log("Received Polar event:", event.type);
 
-    const allowedEvents = [
-      "subscription.created",
-      "subscription.updated",
-      "subscription.active",
-      "subscription.canceled",
-      "subscription.uncanceled",
-      "subscription.revoked",
-      "subscription.past_due",
-    ];
-
+    // 2. Ignore events that are not subscription events.
     if (!allowedEvents.includes(event.type)) {
       return NextResponse.json({ received: true });
     }
@@ -70,11 +72,7 @@ export async function POST(req: NextRequest) {
     const d = event.data;
 
     if (!d?.id || !d?.product_id) {
-      console.error("Missing subscription details:", {
-        eventType: event.type,
-        hasSubscriptionId: Boolean(d?.id),
-        hasProductId: Boolean(d?.product_id),
-      });
+      console.error("Missing subscription information.");
 
       return NextResponse.json(
         { error: "Missing subscription details." },
@@ -82,14 +80,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve the subscription plan.
-    const productPlans: Record<string, string | undefined> = {
-      [process.env.POLAR_PRODUCT_MONTHLY ?? ""]: "monthly",
-      [process.env.POLAR_PRODUCT_BIWEEKLY ?? ""]: "biweekly",
-      [process.env.POLAR_PRODUCT_YEARLY ?? ""]: "yearly",
-    };
+    // 3. Resolve subscription plan from Polar product ID.
+    const productPlans: Record<string, string> = {};
 
-    const metadataPlan = d?.metadata?.plan;
+    if (process.env.POLAR_PRODUCT_MONTHLY) {
+      productPlans[process.env.POLAR_PRODUCT_MONTHLY] = "monthly";
+    }
+
+    if (process.env.POLAR_PRODUCT_BIWEEKLY) {
+      productPlans[process.env.POLAR_PRODUCT_BIWEEKLY] = "biweekly";
+    }
+
+    if (process.env.POLAR_PRODUCT_YEARLY) {
+      productPlans[process.env.POLAR_PRODUCT_YEARLY] = "yearly";
+    }
+
+    const metadataPlan = d.metadata?.plan;
 
     const plan =
       typeof metadataPlan === "string" &&
@@ -98,9 +104,9 @@ export async function POST(req: NextRequest) {
         : productPlans[d.product_id];
 
     if (!plan || !allowedPlans.includes(plan)) {
-      console.error("Unknown Polar product or plan:", {
+      console.error("Unknown Polar product:", {
         productId: d.product_id,
-        plan: metadataPlan ?? null,
+        metadataPlan,
       });
 
       return NextResponse.json(
@@ -109,89 +115,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the exact database user ID from Polar.
+    // 4. Get the unique database user ID from Polar.
+    // Never use email to identify an account because
+    // multiple DrevaSports accounts may share an email.
+
     const externalId =
-      d?.customer?.external_id ??
-      d?.external_customer_id ??
-      d?.metadata?.userId ??
+      d.customer?.external_id ??
+      d.external_customer_id ??
+      d.metadata?.userId ??
       null;
 
-    const customerEmail =
-      d?.customer?.email ??
-      d?.customer_email ??
-      null;
+    if (!externalId) {
+      console.error(
+        "Polar subscription is missing external customer ID.",
+        {
+          subscriptionId: d.id,
+          customerId: d.customer_id,
+          customerEmail: d.customer?.email,
+        }
+      );
 
-    let user: { id: string; email: string } | null = null;
-
-    // First attempt: match the exact database user ID.
-    if (externalId) {
-      user = await prisma.user.findUnique({
-        where: {
-          id: String(externalId),
+      return NextResponse.json(
+        {
+          error:
+            "Missing external customer ID. Start a new checkout using the correct account.",
         },
-        select: {
-          id: true,
-          email: true,
-        },
-      });
+        { status: 400 }
+      );
     }
 
-    // Fallback: email is safe only if exactly one account matches.
-    if (!user && customerEmail) {
-      const matchingUsers = await prisma.user.findMany({
-        where: {
-          email: String(customerEmail).trim().toLowerCase(),
-        },
-        select: {
-          id: true,
-          email: true,
-        },
-        take: 2,
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-      if (matchingUsers.length === 1) {
-        user = matchingUsers[0];
-      } else if (matchingUsers.length > 1) {
-        console.error(
-          "Multiple accounts share this email. Polar external customer ID is required.",
-          {
-            customerEmail,
-            matchingAccounts: matchingUsers.length,
-          }
-        );
-
-        return NextResponse.json(
-          {
-            error:
-              "Multiple accounts found. Checkout must include the correct external customer ID.",
-          },
-          { status: 409 }
-        );
-      }
-    }
+    // 5. Find the exact user by unique Prisma ID.
+    const user = await prisma.user.findUnique({
+      where: {
+        id: String(externalId),
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
 
     if (!user) {
-      console.error("Drevasports Polar user mapping failed:", {
-        eventType: event.type,
+      console.error("DrevaSports user not found:", {
+        externalId: String(externalId),
         subscriptionId: d.id,
-        productId: d.product_id,
-        externalId: externalId ? String(externalId) : null,
-        hasCustomerEmail: Boolean(customerEmail),
       });
 
       return NextResponse.json(
         {
           error:
-            "User not found. Check Polar external customer ID mapping.",
+            "No DrevaSports account matches this Polar external customer ID.",
         },
         { status: 404 }
       );
     }
 
-    // Map Polar event to application subscription status.
+    // 6. Map Polar events to subscription statuses.
     const statuses: Record<string, string> = {
       "subscription.created": d.status ?? "inactive",
       "subscription.updated": d.status ?? "inactive",
@@ -204,6 +183,7 @@ export async function POST(req: NextRequest) {
 
     const status = statuses[event.type];
 
+    // 7. Convert subscription dates.
     const periodStart = d.current_period_start
       ? new Date(d.current_period_start)
       : null;
@@ -215,7 +195,7 @@ export async function POST(req: NextRequest) {
     const customerId =
       d.customer_id ?? d.customer?.id ?? null;
 
-    // Create or update the user's subscription.
+    // 8. Save subscription to PostgreSQL.
     await prisma.subscription.upsert({
       where: {
         userId: user.id,
@@ -244,14 +224,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("Drevasports subscription updated successfully:", {
-      userId: user.id,
-      plan,
-      status,
-      subscriptionId: d.id,
-    });
+    console.log(
+      "DrevaSports subscription updated successfully:",
+      {
+        userId: user.id,
+        email: user.email,
+        plan,
+        status,
+        subscriptionId: d.id,
+      }
+    );
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({
+      received: true,
+      subscriptionUpdated: true,
+    });
 
   } catch (error) {
     console.error("Polar webhook processing failed:", error);
