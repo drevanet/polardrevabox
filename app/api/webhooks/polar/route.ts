@@ -1,8 +1,11 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { webhooks } from "@polar-sh/sdk/2026-10";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+
+const allowedPlans = ["monthly", "biweekly", "yearly"];
 
 export async function POST(req: NextRequest) {
   const secret = process.env.POLAR_WEBHOOK_SECRET;
@@ -79,21 +82,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve the plan from checkout metadata or configured products.
-    const plan =
-      d?.metadata?.plan ??
-      (d.product_id === process.env.POLAR_PRODUCT_MONTHLY
-        ? "monthly"
-        : d.product_id === process.env.POLAR_PRODUCT_BIWEEKLY
-          ? "biweekly"
-          : d.product_id === process.env.POLAR_PRODUCT_YEARLY
-            ? "yearly"
-            : null);
+    // Resolve the subscription plan.
+    const productPlans: Record<string, string | undefined> = {
+      [process.env.POLAR_PRODUCT_MONTHLY ?? ""]: "monthly",
+      [process.env.POLAR_PRODUCT_BIWEEKLY ?? ""]: "biweekly",
+      [process.env.POLAR_PRODUCT_YEARLY ?? ""]: "yearly",
+    };
 
-    if (!["monthly", "biweekly", "yearly"].includes(plan)) {
+    const metadataPlan = d?.metadata?.plan;
+
+    const plan =
+      typeof metadataPlan === "string" &&
+      allowedPlans.includes(metadataPlan)
+        ? metadataPlan
+        : productPlans[d.product_id];
+
+    if (!plan || !allowedPlans.includes(plan)) {
       console.error("Unknown Polar product or plan:", {
         productId: d.product_id,
-        plan: plan ?? null,
+        plan: metadataPlan ?? null,
       });
 
       return NextResponse.json(
@@ -102,7 +109,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the possible user identifiers from the event.
+    // Get the exact database user ID from Polar.
     const externalId =
       d?.customer?.external_id ??
       d?.external_customer_id ??
@@ -114,28 +121,60 @@ export async function POST(req: NextRequest) {
       d?.customer_email ??
       null;
 
-    let user = null;
+    let user: { id: string; email: string } | null = null;
 
-    // First attempt: match the database user ID.
+    // First attempt: match the exact database user ID.
     if (externalId) {
       user = await prisma.user.findUnique({
-        where: { id: String(externalId) },
-        select: { id: true, email: true },
+        where: {
+          id: String(externalId),
+        },
+        select: {
+          id: true,
+          email: true,
+        },
       });
     }
 
-    // Second attempt: match the customer's email.
+    // Fallback: email is safe only if exactly one account matches.
     if (!user && customerEmail) {
-      user = await prisma.user.findUnique({
+      const matchingUsers = await prisma.user.findMany({
         where: {
           email: String(customerEmail).trim().toLowerCase(),
         },
-        select: { id: true, email: true },
+        select: {
+          id: true,
+          email: true,
+        },
+        take: 2,
+        orderBy: {
+          createdAt: "desc",
+        },
       });
+
+      if (matchingUsers.length === 1) {
+        user = matchingUsers[0];
+      } else if (matchingUsers.length > 1) {
+        console.error(
+          "Multiple accounts share this email. Polar external customer ID is required.",
+          {
+            customerEmail,
+            matchingAccounts: matchingUsers.length,
+          }
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Multiple accounts found. Checkout must include the correct external customer ID.",
+          },
+          { status: 409 }
+        );
+      }
     }
 
     if (!user) {
-      console.error("Polar user mapping failed:", {
+      console.error("Drevasports Polar user mapping failed:", {
         eventType: event.type,
         subscriptionId: d.id,
         productId: d.product_id,
@@ -143,14 +182,16 @@ export async function POST(req: NextRequest) {
         hasCustomerEmail: Boolean(customerEmail),
       });
 
-      // Do not acknowledge an event that has not been processed.
       return NextResponse.json(
-        { error: "User not found. Check Polar customer mapping." },
+        {
+          error:
+            "User not found. Check Polar external customer ID mapping.",
+        },
         { status: 404 }
       );
     }
 
-    // Map the Polar event to the application's subscription status.
+    // Map Polar event to application subscription status.
     const statuses: Record<string, string> = {
       "subscription.created": d.status ?? "inactive",
       "subscription.updated": d.status ?? "inactive",
@@ -174,7 +215,7 @@ export async function POST(req: NextRequest) {
     const customerId =
       d.customer_id ?? d.customer?.id ?? null;
 
-    // Create the subscription if necessary, or update the existing one.
+    // Create or update the user's subscription.
     await prisma.subscription.upsert({
       where: {
         userId: user.id,
@@ -203,7 +244,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("Reva Box subscription updated successfully:", {
+    console.log("Drevasports subscription updated successfully:", {
       userId: user.id,
       plan,
       status,
@@ -211,6 +252,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ received: true });
+
   } catch (error) {
     console.error("Polar webhook processing failed:", error);
 
