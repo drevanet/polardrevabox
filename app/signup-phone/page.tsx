@@ -2,10 +2,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
-
-const CUSTOM_REDIRECT_URL =
-  "https://buy.polar.sh/polar_cl_EcnCJnF38C5lWMYwgXEF2q8JwhineaGyPkDPm4ZjrVR";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -18,6 +16,7 @@ export default function SignupPage() {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
@@ -35,9 +34,12 @@ export default function SignupPage() {
     }
 
     try {
+      // Create the account.
       const response = await fetch("/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: cleanName,
           email: cleanEmail,
@@ -53,6 +55,7 @@ export default function SignupPage() {
         return;
       }
 
+      // Automatically sign in the new user.
       const result = await signIn("credentials", {
         email: cleanEmail,
         phone: cleanPhone,
@@ -61,12 +64,14 @@ export default function SignupPage() {
 
       if (result?.error || !result?.ok) {
         setError(
-          "Your account was created, but automatic sign-in failed."
+          "Your account was created, but automatic sign-in failed. Please sign in to continue."
         );
         return;
       }
 
-      window.location.assign(CUSTOM_REDIRECT_URL);
+      // Redirect directly to the monthly Polar checkout.
+      window.location.assign("/api/polar/checkout?plan=monthly");
+
     } catch (err) {
       console.error("Signup error:", err);
       setError("Network error. Please try again.");
@@ -76,28 +81,50 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-950 px-3 py-5 text-white sm:px-5 sm:py-10">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-900 p-4 shadow-2xl sm:rounded-3xl sm:p-9">
-<div className="text-lg font-black italic sm:text-xl">
-  DREVA<span className="text-red-500">SPORTS</span>
-</div>
+    <main className="flex min-h-screen items-center justify-center bg-gray-950 px-5 py-14 text-white">
+      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-gray-900 p-8 shadow-2xl sm:p-12">
 
-<h1 className="mt-5 text-2xl font-black sm:mt-7 sm:text-3xl">
-  Sign up to Drevasports
-</h1>
+        <Link href="/" className="text-xl font-black">
+          reva<span className="text-violet-400">box.</span>
+        </Link>
 
-        <p className="mt-1 text-xs text-gray-400 sm:text-sm">
-          Create your account to get started.
+        <h1 className="mt-8 text-3xl font-black">
+          Create your account
+        </h1>
+
+        <p className="mt-2 text-sm text-gray-400">
+          Register to get started with Reva Box.
         </p>
 
-        <form onSubmit={submit} className="mt-5 space-y-3 sm:mt-7 sm:space-y-4">
+        {/* Monthly subscription information */}
+        <div className="mt-6 rounded-xl border border-violet-500/30 bg-violet-500/10 p-4">
+          <p className="text-sm font-semibold text-violet-300">
+            Monthly Subscription
+          </p>
+
+          <div className="mt-2 flex items-baseline gap-1">
+            <span className="text-3xl font-black text-white">
+              $10
+            </span>
+            <span className="text-sm text-gray-400">
+              / month
+            </span>
+          </div>
+
+          <p className="mt-2 text-sm text-gray-400">
+            Includes 50 project downloads per monthly billing period.
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="mt-8 space-y-5">
 
           <div>
-            <label className="mb-1 block text-xs font-medium sm:text-sm">
+            <label className="mb-2 block text-sm">
               Full name
             </label>
+
             <input
-              className="field w-full !py-2.5 text-sm sm:!py-3"
+              className="field"
               type="text"
               required
               maxLength={100}
@@ -109,28 +136,29 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium sm:text-sm">
+            <label className="mb-2 block text-sm">
               Phone number
             </label>
+
             <input
-              className="field w-full !py-2.5 text-sm sm:!py-3"
+              className="field"
               type="tel"
-              inputMode="tel"
               required
-              maxLength={72}
+              maxLength={25}
               autoComplete="tel"
-              placeholder="Enter your phone number"
+              placeholder="+44 7000 000000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium sm:text-sm">
+            <label className="mb-2 block text-sm">
               Email address
             </label>
+
             <input
-              className="field w-full !py-2.5 text-sm sm:!py-3"
+              className="field"
               type="email"
               required
               maxLength={254}
@@ -142,11 +170,12 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium sm:text-sm">
+            <label className="mb-2 block text-sm">
               Country
             </label>
+
             <select
-              className="field w-full !py-2.5 text-sm sm:!py-3"
+              className="field"
               value={country}
               onChange={(e) => {
                 setCountry(e.target.value);
@@ -160,17 +189,20 @@ export default function SignupPage() {
 
           {country === "Other" && (
             <div>
-              <label className="mb-1 block text-xs font-medium sm:text-sm">
+              <label className="mb-2 block text-sm">
                 Enter your country
               </label>
+
               <input
-                className="field w-full !py-2.5 text-sm sm:!py-3"
+                className="field"
                 type="text"
                 required
                 maxLength={100}
                 placeholder="Enter country name"
                 value={otherCountry}
-                onChange={(e) => setOtherCountry(e.target.value)}
+                onChange={(e) =>
+                  setOtherCountry(e.target.value)
+                }
               />
             </div>
           )}
@@ -178,7 +210,7 @@ export default function SignupPage() {
           {error && (
             <p
               role="alert"
-              className="rounded-lg bg-red-500/10 p-2.5 text-xs text-red-300 sm:text-sm"
+              className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
             >
               {error}
             </p>
@@ -187,12 +219,15 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:py-3.5 sm:text-base"
+            className="w-full rounded-xl bg-violet-500 px-5 py-3.5 font-bold text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading
+              ? "Creating account..."
+              : "Create account and proceed to payment"}
           </button>
 
         </form>
+
       </div>
     </main>
   );
