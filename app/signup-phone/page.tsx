@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Trophy, ArrowRight, Loader2 } from "lucide-react";
@@ -15,8 +15,37 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Reset loading when the user returns to the signup page.
+  useEffect(() => {
+    function resetLoading() {
+      setLoading(false);
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        resetLoading();
+      }
+    }
+
+    window.addEventListener("pageshow", resetLoading);
+    window.addEventListener("focus", resetLoading);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", resetLoading);
+      window.removeEventListener("focus", resetLoading);
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, []);
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (loading) return;
+
     setError("");
     setLoading(true);
 
@@ -113,8 +142,7 @@ export default function SignupPage() {
 
         {/* Heading */}
         <div className="mt-2">
-          <p className="text-sm leading-5 text-gray-400 sm:text-sm sm:leading-6">
-           
+          <p className="text-sm leading-5 text-gray-400 sm:leading-6">
             Create your account to enjoy 50% discount for first month.
           </p>
         </div>
@@ -124,7 +152,6 @@ export default function SignupPage() {
           onSubmit={submit}
           className="mt-4 space-y-3 sm:mt-7 sm:space-y-4"
         >
-
           {/* Full Name */}
           <div>
             <label className="mb-1 block text-base font-semibold text-gray-200 sm:mb-2 sm:text-sm">
@@ -221,7 +248,7 @@ export default function SignupPage() {
           {error && (
             <p
               role="alert"
-              className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-sm leading-5 text-red-300 sm:p-3 sm:text-sm"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 p-2 text-sm leading-5 text-red-300 sm:p-3"
             >
               {error}
             </p>
