@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      console.error("DrevaSports user not found:", {
+      console.error("Revabox user not found:", {
         externalId: String(externalId),
         subscriptionId: d.id,
       });
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "No DrevaSports account matches this Polar external customer ID.",
+            "No Revabox account matches this Polar external customer ID.",
         },
         { status: 404 }
       );
@@ -225,7 +225,7 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(
-      "DrevaSports subscription updated successfully:",
+      "Revabox subscription updated successfully:",
       {
         userId: user.id,
         email: user.email,

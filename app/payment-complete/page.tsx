@@ -21,7 +21,7 @@ export default function Activated() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
-                href="https://wa.me/17095063920"
+                href="https://wa.me/447541095459"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block font-poppins w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl shadow-md transition-all duration-200 text-center"
