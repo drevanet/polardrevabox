@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 const plans = [
   {
     name: "Biweekly",
-    price: "$7",
+    price: "$8.38",
     period: "every 2 weeks",
     description: "Unlimited downloads for active creators.",
     features: [
@@ -21,7 +21,7 @@ const plans = [
   },
   {
     name: "Monthly",
-    price: "$10",
+    price: "$8.00",
     period: "per month",
     description: "Perfect for regular packaging projects.",
     features: [
