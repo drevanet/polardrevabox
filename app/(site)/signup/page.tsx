@@ -4,12 +4,9 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,27 +19,30 @@ export default function SignupPage() {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (loading) return;
+
     setError("");
-    setLoading(true);
 
     const finalCountry =
       country === "Other" ? otherCountry.trim() : country;
 
     if (!finalCountry) {
       setError("Please enter your country.");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+
     try {
+      // Step 1: Create and save the user.
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
           phone,
           country: finalCountry,
         }),
@@ -51,27 +51,34 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed.");
-        return;
+        throw new Error(data.error || "Registration failed.");
       }
 
+      // Step 2: Automatically sign in the newly created user.
       const result = await signIn("credentials", {
-        email,
+        email: email.trim().toLowerCase(),
         phone,
         redirect: false,
       });
 
-      if (result?.error || !result?.ok) {
-        router.push("/login?registered=1");
-        return;
+      if (!result || result.error || !result.ok) {
+        throw new Error(
+          "Your account was created, but automatic sign-in failed. Please try signing in."
+        );
       }
 
-      router.push("/editor");
-      router.refresh();
+      // Step 3: Redirect the authenticated user to the editor.
+      window.location.assign("/editor");
 
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
+    } catch (err) {
+      console.error("Signup error:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Network error. Please try again."
+      );
+
       setLoading(false);
     }
   }
@@ -94,10 +101,12 @@ export default function SignupPage() {
 
         <form onSubmit={submit} className="mt-8 space-y-5">
 
+          {/* Full Name */}
           <div>
             <label className="mb-2 block text-sm">
               Full name
             </label>
+
             <input
               className="field"
               required
@@ -130,7 +139,9 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showPassword ? "Hide password" : "Show password"
+                }
               >
                 {showPassword ? (
                   <EyeOff size={20} />
@@ -141,10 +152,12 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {/* Email Address */}
           <div>
             <label className="mb-2 block text-sm">
               Email address
             </label>
+
             <input
               className="field"
               type="email"
@@ -156,6 +169,7 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Country */}
           <div>
             <label className="mb-2 block text-sm">
               Country
@@ -174,6 +188,7 @@ export default function SignupPage() {
             </select>
           </div>
 
+          {/* Other Country */}
           {country === "Other" && (
             <div>
               <label className="mb-2 block text-sm">
@@ -194,12 +209,17 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* Error Message */}
           {error && (
-            <p className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">
+            <p
+              role="alert"
+              className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300"
+            >
               {error}
             </p>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -207,6 +227,7 @@ export default function SignupPage() {
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
+
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-400">
@@ -215,6 +236,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
+
       </div>
     </main>
   );
