@@ -127,7 +127,7 @@ export default function SignupPage() {
 
       {/* Top Red Announcement Banner */}
       <div className="w-full bg-red-600 px-3 py-3 text-center shadow-md sm:px-5 sm:py-3.5">
-        <p className="text-sm font-bold leading-5 text-white sm:text-[12px]">
+      <p className="text-[11px] font-bold leading-5 text-white sm:text-sm">
           Charged once for the first month and twice for the subsequent months
         </p>
       </div>
