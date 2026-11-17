@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,11 +15,13 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("UK");
   const [otherCountry, setOtherCountry] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
@@ -63,7 +66,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect after successful registration.
       router.push("/editor");
       router.refresh();
 
@@ -106,20 +108,37 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Password Field */}
           <div>
             <label className="mb-2 block text-sm">
-              Phone number
+              Password
             </label>
-            <input
-              className="field"
-              type="tel"
-              required
-              maxLength={25}
-              autoComplete="tel"
-              placeholder="+44 7000 000000"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+
+            <div className="relative">
+              <input
+                className="field pr-12"
+                type={showPassword ? "text" : "password"}
+                required
+                maxLength={100}
+                autoComplete="new-password"
+                placeholder="Enter your password"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} />
+                ) : (
+                  <Eye size={20} />
+                )}
+              </button>
+            </div>
           </div>
 
           <div>

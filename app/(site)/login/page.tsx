@@ -14,6 +14,7 @@ import {
 } from "next/navigation";
 
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
 
 function Form() {
   const router = useRouter();
@@ -21,6 +22,7 @@ function Form() {
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,12 +35,12 @@ function Form() {
     try {
       const result = await signIn("credentials", {
         email: email.trim().toLowerCase(),
-        phone: phone.trim(),
+        phone,
         redirect: false,
       });
 
       if (!result || result.error || !result.ok) {
-        setError("The email or phone number is incorrect.");
+        setError("The email or password is incorrect.");
         return;
       }
 
@@ -73,7 +75,7 @@ function Form() {
         </h1>
 
         <p className="mt-2 text-sm text-slate-400">
-          Sign in using your email address and phone number.
+          Sign in using your email address and password.
         </p>
 
         {params.get("registered") === "1" && (
@@ -104,25 +106,43 @@ function Form() {
             />
           </div>
 
+          {/* Password Field */}
           <div>
             <label
               htmlFor="phone"
               className="mb-2 block text-sm"
             >
-              Phone number
+              Password
             </label>
 
-            <input
-              id="phone"
-              type="tel"
-              required
-              maxLength={25}
-              autoComplete="tel"
-              placeholder="Enter your registered phone number"
-              className="field"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                id="phone"
+                type={showPassword ? "text" : "password"}
+                required
+                maxLength={100}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className="field pr-12"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                aria-label={
+                  showPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={20} />
+                ) : (
+                  <Eye size={20} />
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (
