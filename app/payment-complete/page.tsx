@@ -33,11 +33,11 @@ export default function Activated() {
             </p>
 
             <h1 className="mb-3 sm:mb-4 text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-950">
-              Subscription Activated!
+              Payment Received!
             </h1>
 
             <p className="mx-auto mb-7 sm:mb-9 max-w-md text-sm sm:text-lg leading-6 sm:leading-7 text-slate-500">
-              Your Betisports subscription has been activated.
+              Your Betisports subscription payment has been received.
               Send us a quick message on WhatsApp to get activated in seconds.
             </p>
 
