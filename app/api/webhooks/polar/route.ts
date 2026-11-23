@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       .map((id: string) => id.trim());
 
     // Remove duplicate IDs.
-    const uniqueIds = [...new Set(possibleIds)];
+    const uniqueIds = Array.from(new Set(possibleIds));
 
     if (uniqueIds.length === 0) {
       console.error("No external customer ID found:", {
