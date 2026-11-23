@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   try {
     console.log("Received Polar event:", event.type);
 
-    // 2. Ignore events that are not subscription events.
+    // 2. Ignore unrelated events.
     if (!allowedEvents.includes(event.type)) {
       return NextResponse.json({ received: true });
     }
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Resolve subscription plan from Polar product ID.
+    // 3. Identify the subscription plan.
     const productPlans: Record<string, string> = {};
 
     if (process.env.POLAR_PRODUCT_MONTHLY) {
@@ -98,10 +98,11 @@ export async function POST(req: NextRequest) {
     const metadataPlan = d.metadata?.plan;
 
     const plan =
-      typeof metadataPlan === "string" &&
+      productPlans[d.product_id] ??
+      (typeof metadataPlan === "string" &&
       allowedPlans.includes(metadataPlan)
         ? metadataPlan
-        : productPlans[d.product_id];
+        : null);
 
     if (!plan || !allowedPlans.includes(plan)) {
       console.error("Unknown Polar product:", {
@@ -115,39 +116,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Get the unique database user ID from Polar.
-    // Never use email to identify an account because
-    // multiple DrevaSports accounts may share an email.
+    // 4. Collect all possible Prisma user IDs from Polar.
+    const possibleIds = [
+      d.external_customer_id,
+      d.metadata?.userId,
+      d.customer?.external_id,
+    ]
+      .filter(
+        (id: unknown): id is string =>
+          typeof id === "string" && id.trim().length > 0
+      )
+      .map((id: string) => id.trim());
 
-    const externalId =
-      d.customer?.external_id ??
-      d.external_customer_id ??
-      d.metadata?.userId ??
-      null;
+    // Remove duplicate IDs.
+    const uniqueIds = [...new Set(possibleIds)];
 
-    if (!externalId) {
-      console.error(
-        "Polar subscription is missing external customer ID.",
-        {
-          subscriptionId: d.id,
-          customerId: d.customer_id,
-          customerEmail: d.customer?.email,
-        }
-      );
+    if (uniqueIds.length === 0) {
+      console.error("No external customer ID found:", {
+        subscriptionId: d.id,
+        customerId: d.customer_id,
+      });
 
       return NextResponse.json(
         {
           error:
-            "Missing external customer ID. Start a new checkout using the correct account.",
+            "Missing external customer ID. Please start a new checkout.",
         },
         { status: 400 }
       );
     }
 
-    // 5. Find the exact user by unique Prisma ID.
-    const user = await prisma.user.findUnique({
+    // 5. Check every candidate against the actual database.
+    const matchingUsers = await prisma.user.findMany({
       where: {
-        id: String(externalId),
+        id: {
+          in: uniqueIds,
+        },
       },
       select: {
         id: true,
@@ -155,20 +159,39 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!user) {
-      console.error("Revabox user not found:", {
-        externalId: String(externalId),
+    // Avoid accidentally assigning a subscription to the wrong user.
+    if (matchingUsers.length > 1) {
+      console.error("Conflicting Polar customer IDs:", {
         subscriptionId: d.id,
+        candidateIds: uniqueIds,
+        matchedUserIds: matchingUsers.map((user) => user.id),
       });
 
       return NextResponse.json(
         {
           error:
-            "No Revabox account matches this Polar external customer ID.",
+            "Multiple accounts match the Polar customer IDs. Manual verification is required.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (matchingUsers.length === 0) {
+      console.error("No RevaBox account matches Polar customer IDs:", {
+        subscriptionId: d.id,
+        candidateIds: uniqueIds,
+      });
+
+      return NextResponse.json(
+        {
+          error:
+            "No RevaBox account matches this Polar external customer ID. Please start a new checkout using your correct account.",
         },
         { status: 404 }
       );
     }
+
+    const user = matchingUsers[0];
 
     // 6. Map Polar events to subscription statuses.
     const statuses: Record<string, string> = {
@@ -224,16 +247,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log(
-      "Revabox subscription updated successfully:",
-      {
-        userId: user.id,
-        email: user.email,
-        plan,
-        status,
-        subscriptionId: d.id,
-      }
-    );
+    console.log("RevaBox subscription updated successfully:", {
+      userId: user.id,
+      email: user.email,
+      plan,
+      status,
+      subscriptionId: d.id,
+    });
 
     return NextResponse.json({
       received: true,

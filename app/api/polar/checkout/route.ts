@@ -8,11 +8,21 @@ import { authOptions } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const products: Record<string, string | undefined> = {
+const products = {
   monthly: process.env.POLAR_PRODUCT_MONTHLY,
   biweekly: process.env.POLAR_PRODUCT_BIWEEKLY,
   yearly: process.env.POLAR_PRODUCT_YEARLY,
 };
+
+type Plan = keyof typeof products;
+
+function isValidPlan(plan: string | null): plan is Plan {
+  return (
+    plan === "monthly" ||
+    plan === "biweekly" ||
+    plan === "yearly"
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Get selected subscription plan.
     const plan = request.nextUrl.searchParams.get("plan");
 
-    if (!plan || !products[plan]) {
+    if (!isValidPlan(plan)) {
       return NextResponse.json(
         { error: "Invalid subscription plan." },
         { status: 400 }
@@ -41,6 +51,15 @@ export async function GET(request: NextRequest) {
     }
 
     const productId = products[plan];
+
+    if (!productId) {
+      console.error(`Polar product ID is missing for plan: ${plan}`);
+
+      return NextResponse.json(
+        { error: "The selected subscription product is not configured." },
+        { status: 500 }
+      );
+    }
 
     const accessToken = process.env.POLAR_ACCESS_TOKEN;
 
@@ -59,10 +78,20 @@ export async function GET(request: NextRequest) {
       console.error("NEXTAUTH_URL is missing.");
 
       return NextResponse.json(
-        { error: "NEXTAUTH_URL is missing." },
+        { error: "Application URL is not configured." },
         { status: 500 }
       );
     }
+
+    // Verify the authenticated user ID.
+    const userId = session.user.id;
+
+    console.log("Creating Polar checkout:", {
+      userId,
+      email: session.user.email,
+      plan,
+      productId,
+    });
 
     // Initialize Polar.
     const polar = createPolar({
@@ -77,22 +106,24 @@ export async function GET(request: NextRequest) {
     const checkout = await polar.checkouts.create({
       products: [productId],
 
-      // Redirect customer to the custom payment completion page.
-      success_url: `${appUrl.replace(/\/$/, "")}/payment-complete`,
+      success_url: `${appUrl.replace(/\/+$/, "")}/payment-complete`,
 
       customer_email: session.user.email ?? undefined,
 
-      // Important: allows webhook to identify the exact user.
-      external_customer_id: session.user.id,
+      // This must match the Prisma User ID used by the webhook.
+      external_customer_id: userId,
 
       metadata: {
+        userId,
         plan,
-        userId: session.user.id,
         source: "reva-box",
       },
     });
 
-    // Redirect to Polar hosted checkout.
+    if (!checkout.url) {
+      throw new Error("Polar did not return a checkout URL.");
+    }
+
     return NextResponse.redirect(checkout.url);
 
   } catch (error) {
