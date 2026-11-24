@@ -65,7 +65,7 @@ export default function Activated() {
             </div>
 
             <p className="mt-6 sm:mt-8 text-[10px] sm:text-xs font-medium tracking-wide text-slate-400">
-              THANK YOU FOR CHOOSING BETISPORTS
+              THANK YOU FOR CHOOSING US
             </p>
 
           </div>

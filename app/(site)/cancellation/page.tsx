@@ -78,7 +78,7 @@ export default function Page() {
                 Monthly
               </p>
               <p className="mt-3 text-3xl font-black text-white">
-                $10
+                $8
               </p>
               <p className="mt-2 text-sm text-slate-400">
                 Billed every month
@@ -93,7 +93,7 @@ export default function Page() {
                 Biweekly
               </p>
               <p className="mt-3 text-3xl font-black text-white">
-                $7
+                $8.38
               </p>
               <p className="mt-2 text-sm text-slate-400">
                 Billed every two weeks
@@ -226,8 +226,8 @@ export default function Page() {
           </p>
 
           <ul className="mt-5 list-disc space-y-3 pl-6 leading-8 text-slate-400">
-            <li>Monthly plan: $10 every month.</li>
-            <li>Biweekly plan: $7 every two weeks.</li>
+            <li>Monthly plan: $8 every month.</li>
+            <li>Biweekly plan: $8.38 every two weeks.</li>
             <li>Yearly plan: $98 every year.</li>
           </ul>
 
@@ -433,22 +433,22 @@ export default function Page() {
           <div className="mt-6 space-y-3 text-slate-300">
             <p>
               <strong className="text-white">Business:</strong>{" "}
-              [Your registered business name]
+              Reva Box
             </p>
 
             <p>
               <strong className="text-white">Support email:</strong>{" "}
-              [Your support email address]
+              info@revabox.online
             </p>
 
             <p>
               <strong className="text-white">Website:</strong>{" "}
-              [Your website address]
+              www.revabox.online
             </p>
 
             <p>
               <strong className="text-white">Business address:</strong>{" "}
-              [Your business address]
+              Close E, Otone Ogodo Layout. Jeddo, Warri, Delta State.
             </p>
           </div>
         </section>

@@ -153,7 +153,7 @@ export default function Page() {
                 Monthly Plan
               </p>
               <p className="mt-3 text-3xl font-black text-white">
-                $10
+                $8
               </p>
               <p className="mt-2 text-sm text-slate-400">
                 Per month
@@ -168,7 +168,7 @@ export default function Page() {
                 Biweekly Plan
               </p>
               <p className="mt-3 text-3xl font-black text-white">
-                $7
+                $8.38
               </p>
               <p className="mt-2 text-sm text-slate-400">
                 Every two weeks
@@ -741,8 +741,7 @@ export default function Page() {
 
           <p className="mt-4 leading-8 text-slate-400">
             These Terms and Conditions are subject
-            to the laws of [Insert the country and
-            jurisdiction governing your business],
+            to the Federal Republic of Nigeria,
             without limiting any mandatory consumer
             protection rights that apply in your
             country of residence.
@@ -809,28 +808,28 @@ export default function Page() {
               <strong className="text-white">
                 Business:
               </strong>{" "}
-              [Your registered business name]
+         Reva Box
             </p>
 
             <p>
               <strong className="text-white">
                 Support email:
               </strong>{" "}
-              [Your support email address]
+              info@revabox.online
             </p>
 
             <p>
               <strong className="text-white">
                 Website:
               </strong>{" "}
-              [Your website address]
+              www.revabox.online
             </p>
 
             <p>
               <strong className="text-white">
                 Business address:
               </strong>{" "}
-              [Your business address]
+              Close E, Otone Ogodo Layout. Jeddo, Warri, Delta State.
             </p>
           </div>
         </section>

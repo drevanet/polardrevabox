@@ -53,13 +53,12 @@ export default function Page() {
           </p>
 
           <p className="mt-4 leading-8 text-slate-400">
-            Business name: [Insert your registered business or legal name].
+          
+            Website: www.revabox.online
             <br />
-            Website: [Insert your website address].
+            Contact email: info@revabox.online
             <br />
-            Contact email: [Insert your privacy contact email].
-            <br />
-            Business address: [Insert your business address].
+            Business address: Close E, Otone Ogodo Layout. Jeddo, Warri, Delta State.
           </p>
         </section>
 
@@ -462,17 +461,17 @@ export default function Page() {
           <div className="mt-6 space-y-3 text-slate-300">
             <p>
               <strong className="text-white">Business:</strong>{" "}
-              [Your registered business name]
+              Reva Box
             </p>
 
             <p>
               <strong className="text-white">Email:</strong>{" "}
-              [Your privacy contact email]
+              info@revabox.online
             </p>
 
             <p>
               <strong className="text-white">Address:</strong>{" "}
-              [Your business address]
+              Close E, Otone Ogodo Layout. Jeddo, Warri, Delta State.
             </p>
           </div>
 

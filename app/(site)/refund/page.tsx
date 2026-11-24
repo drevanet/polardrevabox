@@ -403,22 +403,22 @@ export default function Page() {
           <div className="mt-6 space-y-3 text-slate-300">
             <p>
               <strong className="text-white">Business:</strong>{" "}
-              [Your registered business name]
+              Reva Box
             </p>
 
             <p>
               <strong className="text-white">Support email:</strong>{" "}
-              [Your support email address]
+              info@revabox.online
             </p>
 
             <p>
               <strong className="text-white">Website:</strong>{" "}
-              [Your website address]
+              www.revabox.online
             </p>
 
             <p>
               <strong className="text-white">Business address:</strong>{" "}
-              [Your business address]
+              Close E, Otone Ogodo Layout. Jeddo, Warri, Delta State.
             </p>
           </div>
         </section>
