@@ -4,12 +4,15 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   ArrowUpRight,
   Mail,
   MessageCircle,
   Send,
   Sparkles,
+  MapPin,
+  Phone,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function ContactPage() {
@@ -17,28 +20,85 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+  const accessKey =
+    process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const businessAddress =
+    process.env.NEXT_PUBLIC_BUSINESS_ADDRESS;
+
+  const businessPhone =
+    process.env.NEXT_PUBLIC_BUSINESS_PHONE;
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
 
-    if (!supportEmail) {
+    setError("");
+    setSuccess("");
+
+    if (!accessKey) {
       setError(
         "Contact form is not configured yet. Please try again later."
       );
       return;
     }
 
-    const mailSubject = encodeURIComponent(subject);
-    const mailBody = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
-    );
+    setLoading(true);
 
-    window.location.href =
-      `mailto:${supportEmail}?subject=${mailSubject}&body=${mailBody}`;
+    try {
+      const formData = new FormData(e.currentTarget);
+
+      formData.append("access_key", accessKey);
+      formData.append(
+        "subject",
+        `RevaBox Contact Form: ${subject}`
+      );
+      formData.append("from_name", "RevaBox Website");
+
+      const response = await fetch(
+        "https://api.web3forms.com/submit",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Message could not be sent."
+        );
+      }
+
+      setSuccess(
+        "Your message has been sent successfully. Our team will get back to you."
+      );
+
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+
+      e.currentTarget.reset();
+    } catch (err) {
+      console.error("Contact form error:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -47,10 +107,9 @@ export default function ContactPage() {
       {/* Background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#7557f6]/10 blur-[130px]" />
+
         <div className="absolute right-0 top-[45%] h-[350px] w-[350px] rounded-full bg-violet-700/10 blur-[120px]" />
       </div>
-
-    
 
       {/* Main content */}
       <section className="relative z-10 mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
@@ -71,9 +130,9 @@ export default function ContactPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
-            Have a question about RevaBox, need help with your projects,
-            or experiencing an issue? Send us a message and we'll be happy
-            to help.
+            Have a question about RevaBox, need help with your
+            projects, or experiencing an issue? Send us a message
+            and we'll be happy to help.
           </p>
 
         </div>
@@ -84,6 +143,7 @@ export default function ContactPage() {
           {/* Left information panel */}
           <div className="flex flex-col gap-5">
 
+            {/* Support information */}
             <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-7 sm:p-8">
 
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7557f6]/15">
@@ -100,6 +160,7 @@ export default function ContactPage() {
               </p>
 
               <div className="mt-7 border-t border-white/[0.08] pt-6">
+
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
                   Support
                 </p>
@@ -109,13 +170,76 @@ export default function ContactPage() {
                 </p>
 
                 <p className="mt-2 text-xs leading-6 text-slate-500">
-                  For account, subscription, payment, project, and
-                  download-related enquiries, use the contact form.
+                  For account, subscription, payment, project,
+                  and download-related enquiries, use the contact form.
                 </p>
+
               </div>
 
             </div>
 
+            {/* Business contact details */}
+            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-7 sm:p-8">
+
+              <h2 className="text-xl font-bold">
+                Business Information
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                You can also reach our business team using the
+                contact details below.
+              </p>
+
+              {/* Business address */}
+              {businessAddress && (
+                <div className="mt-6 flex gap-4 border-b border-white/[0.08] pb-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7557f6]/15">
+                    <MapPin className="h-5 w-5 text-[#a995ff]" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Business Address
+                    </p>
+
+                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-white">
+                      {businessAddress}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Business phone */}
+              {businessPhone && (
+                <div className="mt-5 flex gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7557f6]/15">
+                    <Phone className="h-5 w-5 text-[#a995ff]" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                      Phone Number
+                    </p>
+
+                    <a
+                      href={`tel:${businessPhone.replace(/[^\d+]/g, "")}`}
+                      className="mt-2 inline-block text-sm font-medium text-white transition hover:text-[#a995ff]"
+                    >
+                      {businessPhone}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {!businessAddress && !businessPhone && (
+                <p className="mt-5 text-xs text-slate-500">
+                  Business contact details will appear here once configured.
+                </p>
+              )}
+
+            </div>
+
+            {/* Editor promotion */}
             <div className="rounded-3xl border border-[#7557f6]/20 bg-gradient-to-br from-[#7557f6]/20 to-[#7557f6]/[0.04] p-7 sm:p-8">
 
               <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-[#7557f6]">
@@ -156,7 +280,19 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
+
+              {/* Spam protection */}
+              <input
+                type="checkbox"
+                name="botcheck"
+                className="hidden"
+                tabIndex={-1}
+                autoComplete="off"
+              />
 
               <div>
                 <label
@@ -168,6 +304,7 @@ export default function ContactPage() {
 
                 <input
                   id="name"
+                  name="name"
                   type="text"
                   required
                   value={name}
@@ -187,6 +324,7 @@ export default function ContactPage() {
 
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   required
                   value={email}
@@ -206,6 +344,7 @@ export default function ContactPage() {
 
                 <input
                   id="subject"
+                  name="contact_subject"
                   type="text"
                   required
                   value={subject}
@@ -225,6 +364,7 @@ export default function ContactPage() {
 
                 <textarea
                   id="message"
+                  name="message"
                   required
                   rows={5}
                   value={message}
@@ -234,22 +374,49 @@ export default function ContactPage() {
                 />
               </div>
 
+              {/* Error message */}
               {error && (
-                <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <div
+                  role="alert"
+                  className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+                >
                   {error}
-                </p>
+                </div>
               )}
 
+              {/* Success message */}
+              {success && (
+                <div
+                  role="status"
+                  className="flex gap-3 rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm leading-6 text-green-300"
+                >
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                  {success}
+                </div>
+              )}
+
+              {/* Submit button */}
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#7557f6] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#7557f6]/20 transition hover:-translate-y-0.5 hover:bg-[#6545ed] hover:shadow-[#7557f6]/30"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#7557f6] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#7557f6]/20 transition hover:-translate-y-0.5 hover:bg-[#6545ed] hover:shadow-[#7557f6]/30 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Send message
-                <Send className="h-4 w-4" />
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending message...
+                  </>
+                ) : (
+                  <>
+                    Send message
+                    <Send className="h-4 w-4" />
+                  </>
+                )}
               </button>
 
               <p className="text-center text-xs leading-5 text-slate-500">
-           
+                Your message will be sent securely to the RevaBox
+                support email configured in Web3Forms.
               </p>
 
             </form>
@@ -262,6 +429,7 @@ export default function ContactPage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.08]">
+
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
 
           <Link href="/" className="text-lg font-black tracking-tight">
@@ -280,6 +448,7 @@ export default function ContactPage() {
           </Link>
 
         </div>
+
       </footer>
 
     </main>
