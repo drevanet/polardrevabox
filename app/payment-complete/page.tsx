@@ -37,7 +37,7 @@ export default function Activated() {
             </h1>
 
             <p className="mx-auto mb-7 sm:mb-9 max-w-md text-sm sm:text-lg leading-6 sm:leading-7 text-slate-500">
-              Your Betisports subscription payment has been received.
+              Your subscription payment has been received.
               Send us a quick message on WhatsApp to get activated in seconds.
             </p>
 
