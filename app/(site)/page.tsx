@@ -456,7 +456,7 @@ export default function HomePage() {
             {[
               {
                 name: "Biweekly",
-                price: "$7",
+                price: "$8.38",
                 period: "every 2 weeks",
                 detail: "Unlimited downloads",
                 plan: "biweekly",
@@ -464,7 +464,7 @@ export default function HomePage() {
               },
               {
                 name: "Monthly",
-                price: "$10",
+                price: "$8.00",
                 period: "per month",
                 detail: "50 project downloads",
                 plan: "monthly",
