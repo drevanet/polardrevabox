@@ -111,7 +111,6 @@ export default function BoxEditor() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Store the actual WebGL canvas.
   const [previewCanvas, setPreviewCanvas] =
     useState<HTMLCanvasElement | null>(null);
 
@@ -208,7 +207,6 @@ export default function BoxEditor() {
         return;
       }
 
-      // Render a PNG with transparency.
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           (result) => {
@@ -222,7 +220,6 @@ export default function BoxEditor() {
         );
       });
 
-      // Check subscription using the existing API.
       const response = await fetch("/api/download", {
         method: "POST",
         headers: {
@@ -258,7 +255,6 @@ export default function BoxEditor() {
         throw new Error(error);
       }
 
-      // Download PNG.
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
 
@@ -312,26 +308,22 @@ export default function BoxEditor() {
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-transparent text-slate-900">
 
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Package size={16} className="text-violet-500" />
+          <div className="flex items-center gap-2">
+            <Package size={17} className="text-violet-500" />
 
-              <p className="text-xs uppercase tracking-wider text-slate-500">
-                LIVE 3D SOFTWARE PACKAGE
-              </p>
-            </div>
-
-            <p className="mt-2 font-semibold">{name}</p>
+            <p className="font-semibold text-white">
+              {name}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={resetImages}
             disabled={busy}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm transition hover:bg-white/50 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
           >
-            <RotateCcw size={15} />
-            Reset
+            <RotateCcw size={15} className="text-white" />
+            <span className="text-white">Reset</span>
           </button>
         </div>
 
@@ -352,8 +344,6 @@ export default function BoxEditor() {
             onCreated={({ gl, scene }) => {
               gl.setClearColor("#000000", 0);
               scene.background = null;
-
-              // Save the actual HTML canvas.
               setPreviewCanvas(gl.domElement);
             }}
           >
@@ -404,10 +394,10 @@ export default function BoxEditor() {
               type="button"
               onClick={save}
               disabled={busy}
-              className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm transition hover:bg-white/50 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl border border-white/20 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
             >
-              <Save size={16} />
-              Save
+              <Save size={16} className="text-white" />
+              <span className="text-white">Save</span>
             </button>
 
             <button
@@ -447,14 +437,14 @@ export default function BoxEditor() {
 
           <label
             htmlFor="project"
-            className="mb-2 mt-4 block text-sm text-slate-400"
+            className="mb-2 mt-4 block text-sm text-slate-300"
           >
             Project name
           </label>
 
           <input
             id="project"
-            className="field"
+            className="field text-white placeholder:text-slate-400"
             value={name}
             maxLength={100}
             onChange={(e) => setName(e.target.value)}
@@ -473,7 +463,7 @@ export default function BoxEditor() {
               </p>
             </div>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               Drag the sliders to resize your package.
             </p>
 
@@ -558,7 +548,7 @@ export default function BoxEditor() {
               Package artwork
             </h2>
 
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               {faces.filter((face) => images[face]).length}/6
             </span>
           </div>
@@ -567,7 +557,6 @@ export default function BoxEditor() {
             Select a packaging face, then upload its own image.
           </p>
 
-          {/* Face Selection */}
           <div className="mt-4 grid grid-cols-2 gap-2">
             {faces.map((face) => (
               <button
@@ -580,18 +569,17 @@ export default function BoxEditor() {
                     : "border-white/10 hover:border-white/20"
                 }`}
               >
-                <span className="block text-sm font-semibold">
+                <span className="block text-sm font-semibold text-white">
                   {face}
                 </span>
 
-                <span className="mt-1 block text-xs text-slate-500">
+                <span className="mt-1 block text-xs text-slate-400">
                   {images[face] ? "Image added" : "No image"}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Upload */}
           <label
             htmlFor="face-upload"
             className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-violet-400/40 p-4 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/10"
@@ -611,7 +599,6 @@ export default function BoxEditor() {
             }}
           />
 
-          {/* Selected Image Preview */}
           {images[selected] && (
             <div className="mt-3 flex items-center gap-3">
               <img
@@ -621,11 +608,11 @@ export default function BoxEditor() {
               />
 
               <div className="flex-1">
-                <p className="text-xs font-semibold">
+                <p className="text-xs font-semibold text-white">
                   {selected} artwork
                 </p>
 
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-400">
                   Image uploaded
                 </p>
               </div>
