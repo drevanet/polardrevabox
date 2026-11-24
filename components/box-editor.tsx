@@ -50,7 +50,6 @@ function createFaceMaterial(url: string | null) {
   }
 
   const texture = new THREE.TextureLoader().load(url);
-
   texture.colorSpace = THREE.SRGBColorSpace;
 
   return new THREE.MeshStandardMaterial({
@@ -111,6 +110,10 @@ export default function BoxEditor() {
   const [selected, setSelected] = useState<Face>("Front");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Store the actual WebGL canvas.
+  const [previewCanvas, setPreviewCanvas] =
+    useState<HTMLCanvasElement | null>(null);
 
   function updateDimension(
     key: keyof Dimensions,
@@ -193,12 +196,15 @@ export default function BoxEditor() {
     setMessage("");
 
     try {
-      // Find the actual 3D preview canvas.
-      const canvas = document.querySelector(
-        ".box-preview-canvas"
-      ) as HTMLCanvasElement | null;
+      // Use the actual canvas supplied by the 3D renderer.
+      const canvas = previewCanvas;
 
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      if (
+        !canvas ||
+        typeof canvas.toBlob !== "function" ||
+        canvas.width === 0 ||
+        canvas.height === 0
+      ) {
         setMessage("3D preview is not ready. Please try again.");
         return;
       }
@@ -217,7 +223,7 @@ export default function BoxEditor() {
         );
       });
 
-      // Check subscription using your existing API.
+      // Check subscription using the existing API.
       const response = await fetch("/api/download", {
         method: "POST",
         headers: {
@@ -253,7 +259,7 @@ export default function BoxEditor() {
         throw new Error(error);
       }
 
-      // Download the generated PNG.
+      // Download PNG.
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
 
@@ -347,6 +353,9 @@ export default function BoxEditor() {
             onCreated={({ gl, scene }) => {
               gl.setClearColor("#e9eaed", 1);
               scene.background = new THREE.Color("#e9eaed");
+
+              // Save the actual HTML canvas.
+              setPreviewCanvas(gl.domElement);
             }}
           >
             <ambientLight intensity={1.1} />
