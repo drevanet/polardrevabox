@@ -50,6 +50,7 @@ function createFaceMaterial(url: string | null) {
   }
 
   const texture = new THREE.TextureLoader().load(url);
+
   texture.colorSpace = THREE.SRGBColorSpace;
 
   return new THREE.MeshStandardMaterial({
@@ -145,6 +146,10 @@ export default function BoxEditor() {
       setMessage(`${face} artwork added.`);
     };
 
+    reader.onerror = () => {
+      setMessage("Could not read the selected image.");
+    };
+
     reader.readAsDataURL(file);
   }
 
@@ -164,14 +169,19 @@ export default function BoxEditor() {
         }),
       });
 
-      const data = await response.json();
+      let data: { error?: string } = {};
+
+      try {
+        data = await response.json();
+      } catch {}
 
       setMessage(
         response.ok
           ? "Project saved successfully."
           : data.error || "Could not save project."
       );
-    } catch {
+    } catch (error) {
+      console.error("Project save error:", error);
       setMessage("Could not save project.");
     } finally {
       setBusy(false);
@@ -183,70 +193,94 @@ export default function BoxEditor() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/download", {
-        method: "POST",
-      });
-
-      if (response.status === 401) {
-        window.location.href = "/sign-in?next=/editor";
-        return;
-      }
-
-      if (response.status === 402) {
-        window.location.href = "/pricing?required=download";
-        return;
-      }
-
-      if (!response.ok) {
-        let errorMessage = "Could not start download.";
-
-        try {
-          const data = await response.json();
-          errorMessage = data.error || errorMessage;
-        } catch {}
-
-        setMessage(errorMessage);
-        return;
-      }
-
+      // Find the actual 3D preview canvas.
       const canvas = document.querySelector(
         ".box-preview-canvas"
       ) as HTMLCanvasElement | null;
 
-      if (!canvas) {
-        setMessage("3D preview is not ready.");
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        setMessage("3D preview is not ready. Please try again.");
         return;
       }
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            setMessage("Could not create PNG.");
-            return;
-          }
+      // Create the PNG before using a download credit.
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(new Error("PNG creation failed."));
+            }
+          },
+          "image/png"
+        );
+      });
 
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-
-          link.href = url;
-          link.download =
-            (name.trim().replace(/[^a-z0-9-_]+/gi, "-") ||
-              "reva-software-box") + ".png";
-
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-
-          window.setTimeout(() => {
-            URL.revokeObjectURL(url);
-          }, 1000);
-
-          setMessage("PNG export started.");
+      // Check subscription using your existing API.
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        "image/png"
+      });
+
+      if (response.status === 401) {
+        window.location.href = "/login?callbackUrl=%2Feditor";
+        return;
+      }
+
+      if (response.status === 403) {
+        let error = "An active subscription is required.";
+
+        try {
+          const data = await response.json();
+          error = data.error || error;
+        } catch {}
+
+        setMessage(error);
+        return;
+      }
+
+      if (!response.ok) {
+        let error = "Download authorization failed.";
+
+        try {
+          const data = await response.json();
+          error = data.error || error;
+        } catch {}
+
+        throw new Error(error);
+      }
+
+      // Download the generated PNG.
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      const safeName =
+        name.trim().replace(/[^a-z0-9-_]+/gi, "-") ||
+        "reva-software-box";
+
+      link.href = url;
+      link.download = `${safeName}.png`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 2000);
+
+      setMessage("PNG downloaded successfully.");
+    } catch (error) {
+      console.error("PNG download error:", error);
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not download PNG. Please try again."
       );
-    } catch {
-      setMessage("Could not download PNG.");
     } finally {
       setBusy(false);
     }
@@ -286,6 +320,7 @@ export default function BoxEditor() {
           </div>
 
           <button
+            type="button"
             onClick={resetImages}
             disabled={busy}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm transition hover:bg-white disabled:opacity-50"
@@ -373,6 +408,7 @@ export default function BoxEditor() {
 
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={save}
               disabled={busy}
               className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm transition hover:bg-white disabled:opacity-50"
@@ -382,12 +418,13 @@ export default function BoxEditor() {
             </button>
 
             <button
+              type="button"
               onClick={download}
               disabled={busy}
               className="flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-600 disabled:opacity-50"
             >
               <Download size={16} />
-              Download PNG
+              {busy ? "Please wait..." : "Download PNG"}
             </button>
           </div>
         </div>
@@ -541,6 +578,7 @@ export default function BoxEditor() {
           <div className="mt-4 grid grid-cols-2 gap-2">
             {faces.map((face) => (
               <button
+                type="button"
                 key={face}
                 onClick={() => setSelected(face)}
                 className={`rounded-xl border p-3 text-left transition ${
@@ -600,6 +638,7 @@ export default function BoxEditor() {
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   setImages((current) => ({
                     ...current,
