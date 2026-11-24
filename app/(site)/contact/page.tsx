@@ -37,6 +37,9 @@ export default function ContactPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    // Capture the form before the asynchronous request.
+    const form = e.currentTarget;
+
     setError("");
     setSuccess("");
 
@@ -50,7 +53,7 @@ export default function ContactPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData(e.currentTarget);
+      const formData = new FormData(form);
 
       formData.append("access_key", accessKey);
       formData.append(
@@ -87,7 +90,9 @@ export default function ContactPage() {
       setSubject("");
       setMessage("");
 
-      e.currentTarget.reset();
+      // Safe because the form was captured before awaiting.
+      form.reset();
+
     } catch (err) {
       console.error("Contact form error:", err);
 
@@ -193,6 +198,7 @@ export default function ContactPage() {
               {/* Business address */}
               {businessAddress && (
                 <div className="mt-6 flex gap-4 border-b border-white/[0.08] pb-5">
+
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7557f6]/15">
                     <MapPin className="h-5 w-5 text-[#a995ff]" />
                   </div>
@@ -206,12 +212,14 @@ export default function ContactPage() {
                       {businessAddress}
                     </p>
                   </div>
+
                 </div>
               )}
 
               {/* Business phone */}
               {businessPhone && (
                 <div className="mt-5 flex gap-4">
+
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7557f6]/15">
                     <Phone className="h-5 w-5 text-[#a995ff]" />
                   </div>
@@ -228,6 +236,7 @@ export default function ContactPage() {
                       {businessPhone}
                     </a>
                   </div>
+
                 </div>
               )}
 
@@ -294,6 +303,7 @@ export default function ContactPage() {
                 autoComplete="off"
               />
 
+              {/* Name */}
               <div>
                 <label
                   htmlFor="name"
@@ -314,6 +324,7 @@ export default function ContactPage() {
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label
                   htmlFor="email"
@@ -334,6 +345,7 @@ export default function ContactPage() {
                 />
               </div>
 
+              {/* Subject */}
               <div>
                 <label
                   htmlFor="subject"
@@ -354,6 +366,7 @@ export default function ContactPage() {
                 />
               </div>
 
+              {/* Message */}
               <div>
                 <label
                   htmlFor="message"
@@ -374,7 +387,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              {/* Error message */}
+              {/* Error */}
               {error && (
                 <div
                   role="alert"
@@ -384,7 +397,7 @@ export default function ContactPage() {
                 </div>
               )}
 
-              {/* Success message */}
+              {/* Success */}
               {success && (
                 <div
                   role="status"
@@ -395,7 +408,7 @@ export default function ContactPage() {
                 </div>
               )}
 
-              {/* Submit button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
