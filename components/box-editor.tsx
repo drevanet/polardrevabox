@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import {
   Download,
@@ -196,7 +196,6 @@ export default function BoxEditor() {
     setMessage("");
 
     try {
-      // Use the actual canvas supplied by the 3D renderer.
       const canvas = previewCanvas;
 
       if (
@@ -209,7 +208,7 @@ export default function BoxEditor() {
         return;
       }
 
-      // Create the PNG before using a download credit.
+      // Render a PNG with transparency.
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
           (result) => {
@@ -278,7 +277,7 @@ export default function BoxEditor() {
         URL.revokeObjectURL(url);
       }, 2000);
 
-      setMessage("PNG downloaded successfully.");
+      setMessage("Transparent PNG downloaded successfully.");
     } catch (error) {
       console.error("PNG download error:", error);
 
@@ -310,7 +309,7 @@ export default function BoxEditor() {
     <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
 
       {/* 3D Preview */}
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-[#f1f2f4] text-slate-900">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-transparent text-slate-900">
 
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
@@ -329,30 +328,30 @@ export default function BoxEditor() {
             type="button"
             onClick={resetImages}
             disabled={busy}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm transition hover:bg-white disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm transition hover:bg-white/50 disabled:opacity-50"
           >
             <RotateCcw size={15} />
             Reset
           </button>
         </div>
 
-        {/* Light Grey 3D Canvas */}
-        <div className="h-[380px] bg-[#e9eaed] sm:h-[500px]">
+        {/* Transparent 3D Canvas */}
+        <div className="h-[380px] bg-transparent sm:h-[500px]">
           <Canvas
             className="box-preview-canvas"
-            shadows
+            shadows={false}
             camera={{
               position: [4.8, 3.5, 6],
               fov: 36,
             }}
             gl={{
               preserveDrawingBuffer: true,
-              alpha: false,
+              alpha: true,
               antialias: true,
             }}
             onCreated={({ gl, scene }) => {
-              gl.setClearColor("#e9eaed", 1);
-              scene.background = new THREE.Color("#e9eaed");
+              gl.setClearColor("#000000", 0);
+              scene.background = null;
 
               // Save the actual HTML canvas.
               setPreviewCanvas(gl.domElement);
@@ -363,9 +362,6 @@ export default function BoxEditor() {
             <directionalLight
               position={[4, 7, 6]}
               intensity={2.5}
-              castShadow
-              shadow-mapSize-width={2048}
-              shadow-mapSize-height={2048}
             />
 
             <pointLight
@@ -383,18 +379,6 @@ export default function BoxEditor() {
             <Model
               images={images}
               dimensions={dimensions}
-            />
-
-            <ContactShadows
-              position={[
-                0,
-                -(dimensions.height / 2) - 0.03,
-                0,
-              ]}
-              opacity={0.4}
-              scale={6}
-              blur={2.8}
-              far={4}
             />
 
             <OrbitControls
@@ -420,7 +404,7 @@ export default function BoxEditor() {
               type="button"
               onClick={save}
               disabled={busy}
-              className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm transition hover:bg-white disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm transition hover:bg-white/50 disabled:opacity-50"
             >
               <Save size={16} />
               Save
