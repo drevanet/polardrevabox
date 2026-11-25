@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
     const checkout = await polar.checkouts.create({
       products: [productId],
 
-      success_url: `${appUrl.replace(/\/+$/, "")}/editor`,
+      success_url: `${appUrl.replace(/\/+$/, "")}/payment-complete`,
 
       customer_email: session.user.email ?? undefined,
 
